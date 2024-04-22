@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model category {
+  id Int @id @default(autoincrement())
+  name String 
+  image String
+  subcategories subcategory[]
+  products product[]
+}
+
+model brand {
+  id Int @id @default(autoincrement())
+  name String 
+  image String
+  products product[]
+}
+
+
+model subcategory {
+  id Int @id @default(autoincrement())
+  name String 
+  image String
+  categoryId Int
+  category category @relation(fields: [categoryId],references: [id])
+  product product[]
+}
+
+enum UserType {
+  admin
+  user
+  manager
+}
+enum OrderType {
+  cash
+  online
+}
+
+model user {
+  id Int @id @default(autoincrement())
+  name String
+  email String @unique
+  password String
+  image String
+  role UserType? @default(user)
+  passwordChangedAt DateTime?
+  passwordResetCode String?
+  passwordResetCodeExpiresIn DateTime?
+  reviews review[]
+  cart cart[]
+  order order[]
+  wishlist product[]
+  addresses address[]
+}
+
+model product {
+  id Int @id @default(autoincrement())
+  price Float
+  discount Float? @default(0)
+  name String
+  description String
+  categoryId Int
+  category category @relation( fields: [categoryId] , references: [id] )
+  images String[]
+  imageCover String
+  colors String[]
+  subcategories subcategory[]
+  brandId Int
+  brand brand @relation(fields: [brandId],references: [id])
+  ratingQuantity Float? @default(0)
+  ratingAverage Float? @default(0)
+  sold Int @default(0)
+  quantity Int
+  reviews review[]
+  productInCart cart_product[]
+  order_product order_product[]
+  wishlist user[]
+}
+
+
+
+model review {
+  id Int @id @default(autoincrement())
+  rating Int
+  userId Int
+  productId Int
+  comment String
+  user user @relation(fields: [userId],references: [id])
+  product product @relation(fields: [productId],references: [id])
+  @@unique([productId,userId])
+}
+
+model cart {
+  id Int @id @default(autoincrement())
+  price Float
+  priceAfterDiscount Float?
+  userId Int
+  user user @relation(fields: [userId],references: [id])
+  cartItems cart_product[]
+}
+
+model cart_product {
+  id Int @id @default(autoincrement())
+  cartId Int
+  cart cart @relation(fields: [cartId],references: [id],onDelete: Cascade)
+  productId Int
+  product product @relation( fields : [productId] , references : [id],onDelete: Cascade )
+  price Float
+  color String
+  quantity Int
+  @@unique([cartId,productId,color])
+}
+
+model coupon {
+  id Int @id @default(autoincrement())
+  name String @unique
+  couponExpiresIn DateTime 
+  discount Int
+}
+
+model order {
+  id Int @id @default(autoincrement())
+  price Float
+  userId Int
+  user user @relation(fields: [userId],references: [id])
+  cartItems order_product[]
+  deliveredAt DateTime?
+  paidAt DateTime?
+  delivered Boolean? @default(false)
+  paid Boolean? @default(false)
+  tax Float
+  method OrderType @default(cash)
+}
+
+model order_product {
+  id Int @id @default(autoincrement())
+  orderId Int
+  order order @relation(fields: [orderId],references: [id],onDelete: Cascade )
+  productId Int
+  product product @relation( fields : [productId] , references : [id] )
+  price Float
+  color String
+  quantity Int
+}
+
+model address {
+  id Int @id @default(autoincrement())
+  city String
+  street String
+  postalCode String
+  userId Int
+  user user @relation(fields: [userId],references: [id])
+}
