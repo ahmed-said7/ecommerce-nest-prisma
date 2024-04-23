@@ -22,6 +22,7 @@ export class CouponController {
     @Post()
     @UseGuards(AuthenticationGuard,AuthorizationGuard)
     @SetMetadata("roles",[userType.manager,userType.admin])
+    
     createCoupon(@Body() body:CreateCouponDto){
         console.log(body);
         return this.couponService.createCoupon(body);
